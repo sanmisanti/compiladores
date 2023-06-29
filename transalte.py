@@ -1,37 +1,45 @@
 def escribirFinal():
+    #Leo la seccion 1
     archivo = open("resultado.txt", "r")
-
-    compilado = open("compilado.ino", "w")
-    compilado.write("")
-    compilado.close()
-
-    compilado = open("compilado.ino", "a")
-
     lineas = archivo.readlines()
-
     archivo.close()
+    
+    #Escribo en compilado la seccion 1 al reves
+    compilado = open("compilado.ino", "a")
     for linea in reversed(lineas):
         compilado.write(linea)
-    compilado = open("compilado.ino", "a")
-    setup=open("auxiliar.txt", "r")
-    texto = setup.readlines()
-    texto = [elemento for elemento in texto if elemento != "\n"]
-    compilado.write("".join(texto))
     
+    #Leo la seccion Setup y escribo en Compilado
+    setup=open("auxiliarSetup.txt", "r")
+    texto = setup.readlines()
+    compilado.write("".join(["void setup(){\n"]+texto+["\n}"]))
+    
+    
+    #Leo la seccion Loop y escribo en compilado al reves
     auxLoop = open("auxiliarLoop.txt","r")
     textoLoop=auxLoop.readlines()
     compilado.write("void loop(){\n")
     for linea in reversed(textoLoop):
         compilado.write("\t"+linea)
-    
     compilado.write("}")
+    
+    #Cierro los archivos
     compilado.close()
     setup.close()
+    
+    #Blanqueo los auxiliares
+    
+
+def limpiarArchivos():
     auxLoop=open("auxiliarLoop.txt","w")
     auxLoop.close()
-    auxSetup = open("auxiliar.txt","w")
+    auxSetup = open("auxiliarSetup.txt","w")
     auxSetup.close()
-
+    file = open("resultado.txt", 'w')
+    file.close()
+    compilado = open("compilado.ino", "w")
+    compilado.write("")
+    compilado.close()
 
 def traducir(p, callback):
     callback(p)
@@ -75,40 +83,20 @@ def cb_p_d(p):
         file.close()
 
 
-def cb_p_defpi(p,isfirst):
-    
-    
+def cb_p_defpi(p):
+
     list_cast = list (p)
-    
     if(p[1]!=None):
+        auxiliarSetup = open("auxiliarSetup.txt", "a")
         
-        file = open("resultado.txt", 'a')
+        
+        """ file = open("resultado.txt", 'a') """
         quees = {"PINOU": "OUTPUT",
                  "PININ": "INPUT"}
         td = quees.get(list_cast[3:4][0])
-        
-        if (isfirst):
-            archivoAuxiliarWrite = open("auxiliar.txt","w")
-            
-            archivoAuxiliarWrite.writelines(['void setup(){\n'] + ['\n'] +['\n}\n'])
-            archivoAuxiliarWrite.close()
-        pinNP= ["pinMode("]+list_cast[5:6]+[", "]+[td]+[");"]
-        
-        archivoAuxiliarRead = open("auxiliar.txt","r")
-        archivoAuxiliarReadList=archivoAuxiliarRead.readlines()
-        index = archivoAuxiliarReadList.index('\n')
-
-        archivoAuxiliarReadList[index]=pinNP
-        vectorInterior = archivoAuxiliarReadList[index]
-        archivoAuxiliarReadList[index:index+1] = ["\n\n"]+vectorInterior
-
-        resultado="".join(archivoAuxiliarReadList)
-        archivoAuxiliarWrite = open("auxiliar.txt","w")
-        archivoAuxiliarWrite.write(resultado)
-        archivoAuxiliarWrite.close()
-        file.close()
-        
-        archivoAuxiliarRead.close()
+        pinNP= ["\tpinMode("]+list_cast[5:6]+[", "]+[td]+[");\n"]
+        auxiliarSetup.write("".join(pinNP))
+        auxiliarSetup.close()
 
 def cb_p_si(p):
     list_cast = list (p)
@@ -154,3 +142,62 @@ def cb_p_mov(p):
         file.write(resultado)
         file.close()
     
+def flatten_vector(vector):
+    vector_resultante = []
+    for elemento in vector:
+        if isinstance(elemento, list):
+            vector_resultante.extend(flatten_vector(elemento))
+        else:
+            vector_resultante.append(elemento)
+    return vector_resultante
+    
+def cb_p_funcion(p):
+    list_cast = list(p)
+    if(len(list_cast)>4):
+        print("1")
+        resultado = open("resultado.txt","a")
+        quees={"entero": "int",
+                 "texto": "String",
+                 "decimal": "float",
+                 "logico":"bool"}
+        tipoDato = quees.get(list_cast[7:8][0])
+        print("2")
+        args = list_cast[4:5][0]
+        print("args:",args)
+        argstraducidos = []
+        for elemento in args:
+            if elemento in quees:
+                argstraducidos.extend(quees.get(elemento))
+            else:
+                argstraducidos.extend(elemento)
+        print("td:", [tipoDato])
+        print("nombre:", list_cast[2:3])
+        textoEscribir="".join([tipoDato]+[" "]+list_cast[2:3]+["("]+argstraducidos+["){}\n"])
+        print("textoEscribir:",textoEscribir)
+        resultado.write(textoEscribir)
+        resultado.close()
+        
+def cb_p_procedimiento(p):
+    list_cast = list(p)
+    if(len(list_cast)>4):
+        print("1")
+        resultado = open("resultado.txt","a")
+
+        quees={"entero": "int",
+                 "texto": "String",
+                 "decimal": "float",
+                 "logico":"bool"}
+
+        args = list_cast[4:5][0]
+        print("args:",args)
+        print("nombre:", list_cast[2:3])
+        argstraducidos = []
+        for elemento in args:
+            if elemento in quees:
+                argstraducidos.extend(quees.get(elemento))
+            else:
+                argstraducidos.extend(elemento)
+        textoEscribir="".join(list_cast[2:3]+["("]+argstraducidos+["){}\n"])
+        print("textoEscribir:",textoEscribir)
+        resultado.write(textoEscribir)
+        resultado.close()
