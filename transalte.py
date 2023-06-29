@@ -22,7 +22,7 @@ def escribirFinal():
     textoLoop=auxLoop.readlines()
     compilado.write("void loop(){\n")
     for linea in reversed(textoLoop):
-        compilado.write(linea)
+        compilado.write("\t"+linea)
     
     compilado.write("}")
     compilado.close()
@@ -79,31 +79,29 @@ def cb_p_defpi(p,isfirst):
     
     
     list_cast = list (p)
-    print("1")
+    
     if(p[1]!=None):
-        print("2")
+        
         file = open("resultado.txt", 'a')
         quees = {"PINOU": "OUTPUT",
                  "PININ": "INPUT"}
         td = quees.get(list_cast[3:4][0])
-        print(isfirst)
+        
         if (isfirst):
             archivoAuxiliarWrite = open("auxiliar.txt","w")
-            print("3")
+            
             archivoAuxiliarWrite.writelines(['void setup(){\n'] + ['\n'] +['\n}\n'])
             archivoAuxiliarWrite.close()
         pinNP= ["pinMode("]+list_cast[5:6]+[", "]+[td]+[");"]
-        print("pinMP", pinNP)
+        
         archivoAuxiliarRead = open("auxiliar.txt","r")
         archivoAuxiliarReadList=archivoAuxiliarRead.readlines()
-        print("archivoAuxiliarReadList: ",archivoAuxiliarReadList)
         index = archivoAuxiliarReadList.index('\n')
-       
-        print("indeXx: ", index)
+
         archivoAuxiliarReadList[index]=pinNP
         vectorInterior = archivoAuxiliarReadList[index]
         archivoAuxiliarReadList[index:index+1] = ["\n\n"]+vectorInterior
-        print("archivoAuxiliarReadList2: ",archivoAuxiliarReadList)
+
         resultado="".join(archivoAuxiliarReadList)
         archivoAuxiliarWrite = open("auxiliar.txt","w")
         archivoAuxiliarWrite.write(resultado)

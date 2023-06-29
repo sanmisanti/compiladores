@@ -2,6 +2,7 @@ from ply import yacc
 import ply.lex as lex
 from os.path import commonpath
 from transalte import *
+import sys, os
 
 file_path = "resultado.txt"
 
@@ -209,15 +210,22 @@ lexer = lex.lex()
 
 # ACA EMPIEZA EL SEMANTICO
 
+def depurar(texto):
+    depurador = open("depurador.txt","a")
+    depurador.write(texto)
+    depurador.close
+
 
 def p_s(p):
     's : INICIOPROG import FINPROG'
+    depurar("s\n")
     pass
 
 
 def p_import(p):
     '''import : IMPORT APAR LIBRER CPAR FINLINEA import
          | declvar'''
+    depurar("import\n")
     traducir(p, cb_p_librerias)
     pass
 
@@ -230,6 +238,7 @@ def p_declvar(p):
          | COMLIN FINLINEA declvar
          | COMBLO FINLINEA declvar
          | c'''
+    depurar("declvar\n")
     if (len(list(p))>4):
         traducir(p, cb_p_declvar)
     pass
@@ -243,8 +252,10 @@ def p_c(p):
           | COMLIN FINLINEA c
           | COMBLO FINLINEA c
           | d'''
-    if (list(p)[1:2][0]!="//* "):
-        traducir(p,cb_p_asignacion)
+    depurar("c\n")
+    if(len(list(p))>2):
+        if ("//*" not in list(p)[1:2][0]):
+            traducir(p,cb_p_asignacion)
     pass
 
 
@@ -271,23 +282,28 @@ def p_d(p):
           | IDEN ASIGN DFLOAT DIV DFLOAT FINLINEA d
           | COMLIN FINLINEA d
           | COMBLO FINLINEA d
-          | e'''
+          | e
+          | empty'''
+    depurar("d\n")
     if (len(list(p))>4):
         traducir(p,cb_p_d)
     pass
 
 def p_empty(p):
-    'empty : '
+    'empty :'
+    depurar("empty\n")
+    pass
 
 
 def p_e(p):
-    ''' e : FUNC IDEN APAR argumentos CPAR DPUNT INT ALLA declvar CLLA declvar
-          | FUNC IDEN APAR argumentos CPAR DPUNT STRING ALLA declvar CLLA declvar
-          | FUNC IDEN APAR argumentos CPAR DPUNT FLOAT ALLA declvar CLLA declvar
-          | FUNC IDEN APAR argumentos CPAR DPUNT BOOL ALLA declvar CLLA declvar
+    ''' e : FUNC IDEN APAR argumentos CPAR DPUNT INT ALLA declvar CLLA e
+          | FUNC IDEN APAR argumentos CPAR DPUNT STRING ALLA declvar CLLA e
+          | FUNC IDEN APAR argumentos CPAR DPUNT FLOAT ALLA declvar CLLA e
+          | FUNC IDEN APAR argumentos CPAR DPUNT BOOL ALLA declvar CLLA e
           | COMLIN FINLINEA e
           | COMBLO FINLINEA e
           | f'''
+    depurar("e\n")
     pass
 
 
@@ -301,6 +317,7 @@ def p_argumentos(p):
                   | IDEN DPUNT STRING
                   | IDEN DPUNT BOOL
                   | '''
+    depurar("argumentos\n")
     pass
 
 
@@ -313,6 +330,7 @@ def p_argumentos2(p):
                   | IDEN DPUNT FLOAT argumentos
                   | IDEN DPUNT STRING argumentos
                   | IDEN DPUNT BOOL argumentos '''
+    depurar("argumentos2\n")
     pass
 
 
@@ -321,15 +339,17 @@ def p_f(p):
           | COMLIN FINLINEA f
           | COMBLO FINLINEA f
           | g'''
+    depurar("f\n")
+    pass
 
 
 def p_g(p):
-    ''' g : DEFPI APAR PININ DPUNT DINT CPAR FINLINEA declvar
-          | DEFPI APAR PINOU DPUNT DINT CPAR FINLINEA declvar
-          | DEFPI APAR PININ DPUNT IDEN CPAR FINLINEA declvar
-          | DEFPI APAR PINOU DPUNT IDEN CPAR FINLINEA declvar
-          | COMLIN FINLINEA declvar
-          | COMBLO FINLINEA declvar
+    ''' g : DEFPI APAR PININ DPUNT DINT CPAR FINLINEA g
+          | DEFPI APAR PINOU DPUNT DINT CPAR FINLINEA g
+          | DEFPI APAR PININ DPUNT IDEN CPAR FINLINEA g
+          | DEFPI APAR PINOU DPUNT IDEN CPAR FINLINEA g
+          | COMLIN FINLINEA g
+          | COMBLO FINLINEA g
           | h'''
     if (len(list(p))>4):
         p_g.counter=p_g.counter+1
@@ -337,24 +357,26 @@ def p_g(p):
         if p_g.counter==1:
             isfirst=True
         cb_p_defpi(p,isfirst)
+    depurar("g\n")
+    pass
         
 
 
 
 def p_h(p):
-    ''' h : SI APAR IDEN COMP IDEN CPAR APAR declvar CPAR SINO APAR declvar CPAR declvar
-          | SI APAR IDEN COMP DINT CPAR APAR declvar CPAR SINO APAR declvar CPAR declvar
-          | SI APAR IDEN COMP DFLOAT CPAR APAR declvar CPAR SINO APAR declvar CPAR declvar
-          | SI APAR IDEN COMP IDEN CPAR APAR declvar CPAR declvar
-          | SI APAR IDEN COMP DINT CPAR APAR declvar CPAR declvar
-          | SI APAR IDEN COMP DFLOAT CPAR APAR declvar CPAR declvar
-          | DURANTE APAR IDEN COMP IDEN CPAR ACOR declvar CCOR declvar
-          | DURANTE APAR IDEN COMP DINT CPAR ACOR declvar CCOR declvar
-          | DURANTE APAR IDEN COMP DFLOAT CPAR ACOR declvar CCOR declvar
+    ''' h : SI APAR IDEN COMP IDEN CPAR APAR declvar CPAR SINO APAR declvar CPAR h
+          | SI APAR IDEN COMP DINT CPAR APAR declvar CPAR SINO APAR declvar CPAR h
+          | SI APAR IDEN COMP DFLOAT CPAR APAR declvar CPAR SINO APAR declvar CPAR h
+          | SI APAR IDEN COMP IDEN CPAR APAR declvar CPAR h
+          | SI APAR IDEN COMP DINT CPAR APAR declvar CPAR h
+          | SI APAR IDEN COMP DFLOAT CPAR APAR declvar CPAR h
+          | DURANTE APAR IDEN COMP IDEN CPAR ACOR declvar CCOR h
+          | DURANTE APAR IDEN COMP DINT CPAR ACOR declvar CCOR h
+          | DURANTE APAR IDEN COMP DFLOAT CPAR ACOR declvar CCOR h
           | COMLIN FINLINEA h
           | COMBLO FINLINEA h
           | mov
-          |  '''
+          | empty'''
     longitud =len(list(p))
     print("LISTA" , list(p))
     if(longitud>1):
@@ -364,28 +386,34 @@ def p_h(p):
             traducir(p,cb_p_si)
         elif (longitud==15):
             traducir(p,cb_p_sino)
+    depurar("h\n")
+    pass
 
 
 
 def p_mov(p):
-    '''mov : AVANZAR APAR CPAR FINLINEA c
-           | RETROCEDER APAR CPAR FINLINEA c
-           | GIRARIZQ APAR CPAR FINLINEA c
-           | GIRARDER APAR CPAR FINLINEA c
-           | ESPERAR APAR DINT CPAR FINLINEA c
-           | DETENER APAR CPAR FINLINEA c
+    '''mov : AVANZAR APAR CPAR FINLINEA mov
+           | RETROCEDER APAR CPAR FINLINEA mov
+           | GIRARIZQ APAR CPAR FINLINEA mov
+           | GIRARDER APAR CPAR FINLINEA mov
+           | ESPERAR APAR DINT CPAR FINLINEA mov
+           | DETENER APAR CPAR FINLINEA mov
            | COMLIN FINLINEA mov
            | COMBLO FINLINEA mov
-           | c '''
+           | empty '''
+    print("mov")
     if (len(list(p))>4):
         traducir(p,cb_p_mov)
+    depurar("mov\n")
     pass
 
 
 def p_error(p):
     print("Error sintáctico en la li­nea: " + str(p.lineno)
           + ". No se esperaba el token: " + str(p.value))
+    depurar("error\n")
     raise Exception('syntax', 'error')
+    
 
    # print(perror)
    # print('Analisis sintactico incorrecto')
@@ -424,3 +452,6 @@ while True:
     except Exception as e:
         print(e)
         print("Analisis Incorrecto")
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
