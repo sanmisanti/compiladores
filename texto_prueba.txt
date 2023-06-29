@@ -1,3 +1,0 @@
-PEMP
-x=y+2.
-PTERtest
