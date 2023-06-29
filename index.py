@@ -183,7 +183,6 @@ def t_CLLA(t):
     return t
 
 
-# t_IMPORT = r'INCLUIR\([a-zA-z0-9](.)*[a-zA-z0-9]\)'
 t_FINLINEA = r'\.'
 t_ASIGN = r'='
 t_ignore_esp = r'[ ]'
@@ -199,13 +198,13 @@ def t_error(t):
 def t_newline(t):
     r'\n'
     t.lexer.lineno += 1
+    
 
-
-''' t_ignore  = ' \t' '''
 
 __file__ = "index.py"
 
 lexer = lex.lex()
+lexer.lineno=0
 
 
 # ACA EMPIEZA EL SEMANTICO
@@ -303,8 +302,12 @@ def p_e(p):
           | COMLIN FINLINEA e
           | COMBLO FINLINEA e
           | f'''
+    if(len(list(p))>=4):
+        cb_p_funcion(p)
     depurar("e\n")
     pass
+
+
 
 
 def p_argumentos(p):
@@ -317,6 +320,8 @@ def p_argumentos(p):
                   | IDEN DPUNT STRING
                   | IDEN DPUNT BOOL
                   | '''
+    p[0] = p[1:]
+    p[0] = flatten_vector(p[0])
     depurar("argumentos\n")
     pass
 
@@ -330,6 +335,7 @@ def p_argumentos2(p):
                   | IDEN DPUNT FLOAT argumentos
                   | IDEN DPUNT STRING argumentos
                   | IDEN DPUNT BOOL argumentos '''
+    p[0] = p[1:]
     depurar("argumentos2\n")
     pass
 
@@ -339,6 +345,8 @@ def p_f(p):
           | COMLIN FINLINEA f
           | COMBLO FINLINEA f
           | g'''
+    if(len(list(p))>=4):
+        cb_p_procedimiento(p)
     depurar("f\n")
     pass
 
@@ -352,11 +360,7 @@ def p_g(p):
           | COMBLO FINLINEA g
           | h'''
     if (len(list(p))>4):
-        p_g.counter=p_g.counter+1
-        isfirst=False
-        if p_g.counter==1:
-            isfirst=True
-        cb_p_defpi(p,isfirst)
+        cb_p_defpi(p)
     depurar("g\n")
     pass
         
@@ -378,7 +382,6 @@ def p_h(p):
           | mov
           | empty'''
     longitud =len(list(p))
-    print("LISTA" , list(p))
     if(longitud>1):
         if (list(p)[1:2][0] == "DURANTE"):
             traducir(p,cb_p_durante)
@@ -400,12 +403,12 @@ def p_mov(p):
            | DETENER APAR CPAR FINLINEA mov
            | COMLIN FINLINEA mov
            | COMBLO FINLINEA mov
-           | empty '''
-    print("mov")
+           | empty ''' 
     if (len(list(p))>4):
         traducir(p,cb_p_mov)
     depurar("mov\n")
     pass
+    
 
 
 def p_error(p):
@@ -413,11 +416,6 @@ def p_error(p):
           + ". No se esperaba el token: " + str(p.value))
     depurar("error\n")
     raise Exception('syntax', 'error')
-    
-
-   # print(perror)
-   # print('Analisis sintactico incorrecto')
-   # print("Syntax error at '%s'" % t.value)
 
 
 __file__ = "index.py"
@@ -426,14 +424,18 @@ parser2 = yacc.yacc(write_tables=False)
 while True:
     try:
 
-        s = input('Empezar > ')   # Use raw_input on Python
-        p_g.counter=0
-        file = open(file_path, 'w')
-        file.write("")
-        file.close()
+        s = input('Enter para comenzar análisis > ')   # Use raw_input on Python
+        
+        limpiarArchivos()
+        
+        
+        
+        #Leo la entrada
         textoprueba = open("texto_prueba.txt", "r")
         entrada = textoprueba.read()
         textoprueba.close()
+        
+        
         lexer.input(entrada)
         print('Token - Lexema')
         while True:
@@ -447,7 +449,11 @@ while True:
     try:
         parser2.parse(entrada)
         print("Analsis correcto")
-        escribirFinal()
+        try:
+            escribirFinal()
+            print("ARCHIVO COMPILADO CORRECTAMENTE EN 'compilado.txt'")
+        except:
+            print("Error escribiendo")
 
     except Exception as e:
         print(e)
