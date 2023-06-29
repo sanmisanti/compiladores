@@ -1,0 +1,3 @@
+PEMP
+DURANTE(md2>5)[]
+PTER
