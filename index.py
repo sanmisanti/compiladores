@@ -1,5 +1,5 @@
-from ply import yacc
 import ply.lex as lex
+from ply import yacc
 from os.path import commonpath
 from transalte import *
 import sys, os
