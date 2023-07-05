@@ -12,7 +12,10 @@ def escribirFinal():
     #Leo la seccion Setup y escribo en Compilado
     setup=open("auxiliarSetup.txt", "r")
     texto = setup.readlines()
-    compilado.write("".join(["void setup(){\n"]+texto+["\n}"]))
+    compilado.write("void setup(){\n")
+    for linea in reversed(texto):
+        compilado.write("\t"+linea)
+    compilado.write("}")
     
     
     #Leo la seccion Loop y escribo en compilado al reves
@@ -26,6 +29,7 @@ def escribirFinal():
     #Cierro los archivos
     compilado.close()
     setup.close()
+    auxLoop.close()
     
     #Blanqueo los auxiliares
     
@@ -78,7 +82,7 @@ def cb_p_d(p):
     list_cast = list (p)
     if(p[1]!=None):
         file = open("resultado.txt", 'a')
-        resultado = "".join(list_cast[1:2]+["="]+list_cast[3:4]+list_cast[4:5]+list_cast[5:6]+[";\n"])
+        resultado = "".join(list_cast[1:2]+[":="]+list_cast[3:4]+list_cast[4:5]+list_cast[5:6]+[";\n"])
         file.write(resultado)
         file.close()
 
